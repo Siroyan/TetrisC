@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <time.h>
 #include "field.h"
 #include "blocks.h"
 #include "key.h"
@@ -19,28 +20,31 @@ int blcX = 1, blcY = 3;	/* location of block at first */
 /* PROTOTYPE */
 int checkDest(int,int,char);
 void cpBlock(void);
-void keyInput(void);
-void moveBlock(char);
+void operateBlock(char);
 void showDisplayData(void);
 void integrateData(void);
 void recordBlocks(void);
-void rotateBlock(char);
+void clearStack(void);
+void fillStack(void);
 
 int main(void){
 	while(1){
 		int cnt = 0;
-		blcX = 1, blcY = 3;
+		blcX = 1, blcY = 6;
 		cpBlock();
 		while(checkDest(blcX, blcY, 's')){
-			while(cnt == 150){
-				moveBlock('s');
+			/* freefall mino */			
+			while(cnt == 120){
+				operateBlock('s');
 				cnt = 0;
 			}
-			keyInput();
+			operateBlock(kbhit());
+			clearStack();
+			fillStack();
+			/* display process*/
 			system("clear");
 			integrateData();
 			showDisplayData();
-			//TODO Clear proccess
 			usleep(10000);	//10ms
 			cnt++;
 		}
@@ -51,6 +55,7 @@ int main(void){
 
 void cpBlock(){
 	float x;
+	srand((unsigned) time(NULL));
 	x = (float)rand()/(RAND_MAX+1.0);
 	if(0.0 <= x && x < 0.14)	memcpy(tgtBlock, block1, sizeof(int)*4*4);
 	if(0.1 <= x && x < 0.28)	memcpy(tgtBlock, block2, sizeof(int)*4*4);
@@ -61,11 +66,6 @@ void cpBlock(){
 	if(0.6 <= x && x < 1.00)	memcpy(tgtBlock, block7, sizeof(int)*4*4);
 }
 
-void moveBlock(char dir){
-	if(dir == 'a') if(checkDest(blcX, blcY, 'a')) blcY--;
-	if(dir == 's') if(checkDest(blcX, blcY, 's')) blcX++;
-	if(dir == 'd') if(checkDest(blcX, blcY, 'd')) blcY++;
-}
 int checkDest(int x, int y, char dir){
 	int a = 0, b = 0;
 	if(dir == 'a') b = -1;
@@ -80,22 +80,58 @@ int checkDest(int x, int y, char dir){
 	return 1;
 }
 
-void rotateBlock(char dir){
-	int temp[4][4];
-	int check = 1;
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			if(dir == 'l') temp[j][3-i] = tgtBlock[i][j];
-			if(dir == 'r') temp[3-j][i] = tgtBlock[i][j];
+void operateBlock(char dir){
+	/* X-Y moving */
+	if(dir == 'a' && checkDest(blcX, blcY, dir)) blcY--;
+	if(dir == 's' && checkDest(blcX, blcY, dir)) blcX++;
+	if(dir == 'd' && checkDest(blcX, blcY, dir)) blcY++;
+	if(dir == 'q' || dir == 'e'){
+		/* Rotaiton */
+		int temp[4][4];
+		int check = 1;
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+				if(dir == 'q') temp[j][3-i] = tgtBlock[i][j];
+				if(dir == 'e') temp[3-j][i] = tgtBlock[i][j];
+			}
+		}
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+				if(outputData[blcX+i][blcY+j]+temp[i][j] == WALL + BLOC) check = 0;
+				if(outputData[blcX+i][blcY+j]+temp[i][j] == STAC + BLOC) check = 0;
+			}
+		}
+		if(check == 1) memcpy(tgtBlock, temp, sizeof(int)*4*4);
+	}
+}
+
+void clearStack(){
+	for(int i = 1; i < 22; i++){
+		int cnt = 0;
+		for(int j = 3; j < 12; j++){
+			if(stackBlocks[i][j] == STAC) cnt++;
+		}
+		if(cnt == 9){
+			for(int j = 3; j < 12; j++){
+				stackBlocks[i][j] = 0;
+			}
 		}
 	}
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			if(outputData[blcX+i][blcY+j]+temp[i][j] == WALL + BLOC) check = 0;
-			if(outputData[blcX+i][blcY+j]+temp[i][j] == STAC + BLOC) check = 0;
+}
+
+void fillStack(){
+	for(int i = 21; i >= 0; i--){
+		int cnt = 0;
+		for(int j = 11; j >= 2; j--){
+			if(stackBlocks[i][j] == EMPT) cnt++;
+		}
+		if(cnt == 9 && i != 0){
+			for(int j = 11; j >= 2; j--){
+				stackBlocks[i][j] = stackBlocks[i-1][j];
+				stackBlocks[i-1][j] = 0;
+			}
 		}
 	}
-	if(check == 1) memcpy(tgtBlock, temp, sizeof(int)*4*4);
 }
 
 void recordBlocks(){
@@ -107,7 +143,7 @@ void recordBlocks(){
 }
 
 void integrateData(){
-	/* Copy field */
+	/* Copy field and stack */
 	for(int i = 0; i < 25; i++){
 		for(int j = 0; j < 15; j++){
 			outputData[i][j] = field[i][j];
@@ -133,20 +169,10 @@ void showDisplayData(){
 		printf("\n");
 	}
 }
-void keyInput(){
-	char buf;
-	buf = kbhit();
-	if(buf == 'a') moveBlock('a');			/* move left */
-	if(buf == 's') moveBlock('s');			/* move under */
-	if(buf == 'd') moveBlock('d');			/* move right */
-	if(buf == 'q') rotateBlock('l');		/* rotate left */
-	if(buf == 'e') rotateBlock('r');	/* rotate right */
-}
-
 /*
 void showDisplayData(){
-	for(int i = 0; i < 20; i++){
-		for(int j = 0; j < 10; j++){
+	for(int i = 0; i < 25; i++){
+		for(int j = 0; j < 15; j++){
 			printf("%d",outputData[i][j]);
 		}
 		printf("\n");
