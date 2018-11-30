@@ -24,8 +24,7 @@ void moveBlock(char);
 void showDisplayData(void);
 void integrateData(void);
 void recordBlocks(void);
-void rotateBlockL(char);
-void rotateBlockR(char);
+void rotateBlock(char);
 
 int main(void){
 	while(1){
@@ -63,11 +62,10 @@ void cpBlock(){
 }
 
 void moveBlock(char dir){
-	if(dir == 'a') if(checkDest(blcX, blcY, 'a') == 1) blcY--;
-	if(dir == 's') if(checkDest(blcX, blcY, 's') == 1) blcX++;
-	if(dir == 'd') if(checkDest(blcX, blcY, 'd') == 1) blcY++;
+	if(dir == 'a') if(checkDest(blcX, blcY, 'a')) blcY--;
+	if(dir == 's') if(checkDest(blcX, blcY, 's')) blcX++;
+	if(dir == 'd') if(checkDest(blcX, blcY, 'd')) blcY++;
 }
-
 int checkDest(int x, int y, char dir){
 	int a = 0, b = 0;
 	if(dir == 'a') b = -1;
@@ -75,11 +73,37 @@ int checkDest(int x, int y, char dir){
 	if(dir == 'd') b =  1;
 	for(int i = 0; i < 4; i++){
 		for(int j = 0; j < 4; j++){
-			if(outputData[x+i+a][y+j+b]+tgtBlock[i][j] == 3) return 0;
-			if(outputData[x+i+a][y+j+b]+tgtBlock[i][j] == 6) return 0;
+			if(outputData[x+i+a][y+j+b]+tgtBlock[i][j] == WALL + BLOC) return 0;
+			if(outputData[x+i+a][y+j+b]+tgtBlock[i][j] == STAC + BLOC) return 0;
 		}
 	}
 	return 1;
+}
+
+void rotateBlock(char dir){
+	int temp[4][4];
+	int check = 1;
+	for(int i = 0; i < 4; i++){
+		for(int j = 0; j < 4; j++){
+			if(dir == 'l') temp[j][3-i] = tgtBlock[i][j];
+			if(dir == 'r') temp[3-j][i] = tgtBlock[i][j];
+		}
+	}
+	for(int i = 0; i < 4; i++){
+		for(int j = 0; j < 4; j++){
+			if(outputData[blcX+i][blcY+j]+temp[i][j] == WALL + BLOC) check = 0;
+			if(outputData[blcX+i][blcY+j]+temp[i][j] == STAC + BLOC) check = 0;
+		}
+	}
+	if(check == 1) memcpy(tgtBlock, temp, sizeof(int)*4*4);
+}
+
+void recordBlocks(){
+	for(int i = 0; i < 4; i++){
+		for(int j = 0; j < 4; j++){
+			if(tgtBlock[i][j]==2) stackBlocks[blcX+i][blcY+j] = STAC;
+		}
+	}
 }
 
 void integrateData(){
@@ -93,14 +117,14 @@ void integrateData(){
 	/* Copy block */
 	for(int i = 0; i < 4; i++){
 		for(int j = 0; j < 4; j++){
-			if(tgtBlock[i][j] == 2) outputData[blcX+i][blcY+j] = tgtBlock[i][j];
+			if(tgtBlock[i][j] == BLOC) outputData[blcX+i][blcY+j] = BLOC;
 		}
 	}
 }
 
 void showDisplayData(){
-	for(int i = 0; i < 25; i++){
-		for(int j = 0; j < 15; j++){
+	for(int i = 0; i < 23; i++){
+		for(int j = 2; j < 13; j++){
 			if(outputData[i][j] == EMPT) printf("  ");
 			if(outputData[i][j] == WALL) printf("■ ");	
 			if(outputData[i][j] == BLOC) printf("□ ");
@@ -109,25 +133,16 @@ void showDisplayData(){
 		printf("\n");
 	}
 }
+void keyInput(){
+	char buf;
+	buf = kbhit();
+	if(buf == 'a') moveBlock('a');			/* move left */
+	if(buf == 's') moveBlock('s');			/* move under */
+	if(buf == 'd') moveBlock('d');			/* move right */
+	if(buf == 'q') rotateBlock('l');		/* rotate left */
+	if(buf == 'e') rotateBlock('r');	/* rotate right */
+}
 
-void rotateBlockR(char dir){
-	int temp[4][4];
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			temp[j][3-i] = tgtBlock[i][j];
-		}
-	}
-	memcpy(tgtBlock, temp, sizeof(int)*4*4);
-}
-void rotateBlockL(char dir){
-	int temp[4][4];
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			temp[3-j][i] = tgtBlock[i][j];
-		}
-	}
-	memcpy(tgtBlock, temp, sizeof(int)*4*4);
-}
 /*
 void showDisplayData(){
 	for(int i = 0; i < 20; i++){
@@ -138,19 +153,3 @@ void showDisplayData(){
 	}
 }
 */
-void recordBlocks(){
-	for(int i = 0; i < 4; i++){
-		for(int j = 0; j < 4; j++){
-			if(tgtBlock[i][j]==2) stackBlocks[blcX+i][blcY+j] = STAC;
-		}
-	}
-}
-void keyInput(){
-	char buf;
-	buf = kbhit();
-	if(buf == 'a') moveBlock('a');			/* move left */
-	if(buf == 's') moveBlock('s');			/* move under */
-	if(buf == 'd') moveBlock('d');			/* move right */
-	if(buf == 'q') rotateBlockL('q');		/* rotate left */
-	if(buf == 'r')	 rotateBlockR('r');	/* rotate right */
-}
