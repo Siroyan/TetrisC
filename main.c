@@ -14,6 +14,7 @@
 
 /* FIELD DATA */
 static int tgtBlock[4][4];
+static int hldBlock[4][4];
 static int stackBlocks[25][15];
 static int outputData[25][15];
 int blcX = 1, blcY = 3;	/* location of block at first */
@@ -30,11 +31,12 @@ void fillStack(void);
 int main(void){
 	while(1){
 		int cnt = 0;
+		memcpy(hldBlock, block1, sizeof(int)*4*4);
 		blcX = 1, blcY = 6;
 		cpBlock();
 		while(checkDest(blcX, blcY, 's')){
 			/* freefall mino */			
-			while(cnt == 8){
+			while(cnt == 10){
 				operateBlock('s');
 				cnt = 0;
 			}
@@ -102,6 +104,14 @@ void operateBlock(char dir){
 			}
 		}
 		if(check == 1) memcpy(tgtBlock, temp, sizeof(int)*4*4);
+	}
+	if(dir == 'h'){
+		/* Translation tgtBlock <-> hldBlock */
+		int temp[4][4];
+		memcpy(temp, tgtBlock, sizeof(int)*4*4);
+		memcpy(tgtBlock, hldBlock, sizeof(int)*4*4);
+		memcpy(hldBlock, temp, sizeof(int)*4*4);
+		blcX = 1, blcY = 6;
 	}
 }
 
