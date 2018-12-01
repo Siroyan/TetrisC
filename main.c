@@ -34,7 +34,7 @@ int main(void){
 		cpBlock();
 		while(checkDest(blcX, blcY, 's')){
 			/* freefall mino */			
-			while(cnt == 120){
+			while(cnt == 8){
 				operateBlock('s');
 				cnt = 0;
 			}
@@ -45,7 +45,7 @@ int main(void){
 			system("clear");
 			integrateData();
 			showDisplayData();
-			usleep(10000);	//10ms
+			usleep(100000);
 			cnt++;
 		}
 		recordBlocks();
@@ -106,13 +106,13 @@ void operateBlock(char dir){
 }
 
 void clearStack(){
-	for(int i = 1; i < 22; i++){
+	for(int i = 0; i < 25; i++){
 		int cnt = 0;
-		for(int j = 3; j < 12; j++){
+		for(int j = 0; j < 15; j++){
 			if(stackBlocks[i][j] == STAC) cnt++;
 		}
 		if(cnt == 9){
-			for(int j = 3; j < 12; j++){
+			for(int j = 0; j < 15; j++){
 				stackBlocks[i][j] = 0;
 			}
 		}
@@ -120,13 +120,13 @@ void clearStack(){
 }
 
 void fillStack(){
-	for(int i = 21; i >= 0; i--){
+	for(int i = 21; i >= 1; i--){
 		int cnt = 0;
-		for(int j = 11; j >= 2; j--){
+		for(int j = 0; j < 15; j++){
 			if(stackBlocks[i][j] == EMPT) cnt++;
 		}
-		if(cnt == 9 && i != 0){
-			for(int j = 11; j >= 2; j--){
+		if(cnt == 15){
+			for(int j = 0; j < 15; j++){
 				stackBlocks[i][j] = stackBlocks[i-1][j];
 				stackBlocks[i-1][j] = 0;
 			}
@@ -159,8 +159,8 @@ void integrateData(){
 }
 
 void showDisplayData(){
-	for(int i = 0; i < 23; i++){
-		for(int j = 2; j < 13; j++){
+	for(int i = 0; i < 25; i++){
+		for(int j = 0; j < 15; j++){
 			if(outputData[i][j] == EMPT) printf("  ");
 			if(outputData[i][j] == WALL) printf("■ ");	
 			if(outputData[i][j] == BLOC) printf("□ ");
@@ -169,6 +169,7 @@ void showDisplayData(){
 		printf("\n");
 	}
 }
+
 /*
 void showDisplayData(){
 	for(int i = 0; i < 25; i++){
