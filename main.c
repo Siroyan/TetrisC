@@ -27,11 +27,12 @@ void integrateData(void);
 void recordBlocks(void);
 void clearStack(void);
 void fillStack(void);
+int checkFailed(void);
 
 int main(void){
+	memcpy(hldBlock, block1, sizeof(int)*4*4);
 	while(1){
 		int cnt = 0;
-		memcpy(hldBlock, block1, sizeof(int)*4*4);
 		blcX = 1, blcY = 6;
 		cpBlock();
 		while(checkDest(blcX, blcY, 's')){
@@ -49,6 +50,10 @@ int main(void){
 			showDisplayData();
 			usleep(100000);
 			cnt++;
+		}
+		if(checkFailed() == 1){
+			printf("Mission Failed!\n");
+			break;
 		}
 		recordBlocks();
 	}
@@ -178,6 +183,13 @@ void showDisplayData(){
 		}
 		printf("\n");
 	}
+}
+
+int checkFailed(){
+	for(int j = 3; j < 12; j++){
+		if(outputData[1][j] == BLOC) return 1;
+	}
+	return 0;
 }
 
 /*
